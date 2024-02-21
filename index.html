@@ -18,13 +18,26 @@
         }
         .container {
             text-align: center;
+            width: 80%;
+            max-width: 600px;
+        }
+        #imageUpload {
+            margin-bottom: 20px;
         }
         img {
-            width: 50%; /* Enlarge image */
-            height: auto;
+            display: block; /* Ensures the image is block level for margin auto to work */
+            margin: 20px auto; /* Adds space and centers the image */
+            max-width: 100%; /* Ensures the image is responsive */
         }
         .prediction {
             margin-top: 20px;
+        }
+        #refreshButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -32,6 +45,7 @@
     <div class="container">
         <h1>Model Prediction</h1>
         <input type="file" id="imageUpload" accept="image/*">
+        <button id="refreshButton" onclick="location.reload()">Upload Next Image</button>
         <div class="prediction" id="prediction">Prediction will be displayed here</div>
         <!-- Displaying the image -->
         <img id="uploadedImage" src="" alt="Uploaded Image" style="display:none;">
@@ -47,10 +61,8 @@
 
         // Function to interpret the prediction score
         function interpretPrediction(predictionScore) {
-            const threshold = 0.5; // Adjust this threshold as necessary
-            const roundedScore = predictionScore.toFixed(4); // Rounded to 4 decimal places
-            const predictionText = predictionScore >= threshold ? `Malignant (Yes)` : `Benign (No)`;
-            return `${predictionText}, Score: ${roundedScore}`;
+            const threshold = 0.5; 
+            return predictionScore >= threshold ? 'Malignant' : 'Benign';
         }
 
         async function predict(imageData) {
@@ -64,8 +76,8 @@
             console.log(prediction);
 
             // Interpret and display the prediction
-            const interpretedPrediction = interpretPrediction(prediction[0]); // Assuming a single output prediction
-            document.getElementById('prediction').innerText = `Prediction: ${interpretedPrediction}`;
+            const interpretedPrediction = interpretPrediction(prediction[0]);
+            document.getElementById('prediction').innerText = interpretedPrediction;
             
             // Display the uploaded image
             const uploadedImageElement = document.getElementById('uploadedImage');
