@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TensorFlow.js Model Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .prediction { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Model Prediction</h1>
+    <input type="file" id="imageUpload" accept="image/*">
+    <div class="prediction" id="prediction"></div>
+
+    <script>
+        let model;
+
+        async function loadModel() {
+            model = await tf.loadLayersModel('tfjs_model/model.json');
+            console.log("Model loaded.");
+        }
+
+        async function predict(imageData) {
+            // Assuming your model takes 224x224 images as input
+            let tensor = tf.browser.fromPixels(imageData).resizeNearestNeighbor([224, 224]).toFloat();
+            let offset = tf.scalar(255.0);
+            tensor = tensor.div(offset).expandDims();
+
+            // Make a prediction
+            const prediction = await model.predict(tensor).data();
+            console.log(prediction);
+
+            // Display the prediction
+            document.getElementById('prediction').innerText = `Prediction: ${prediction}`;
+        }
+
+        window.addEventListener('load', () => {
+            loadModel();
+            document.getElementById('imageUpload').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => predict(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+</body>
+</html>
