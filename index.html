@@ -5,14 +5,37 @@
     <title>TensorFlow.js Model Demo</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .prediction { margin-top: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            background-color: #0000FF; /* Blue background */
+            color: white; /* White text */
+        }
+        .container {
+            text-align: center;
+        }
+        img {
+            width: 50%; /* Enlarge image */
+            height: auto;
+        }
+        .prediction {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>Model Prediction</h1>
-    <input type="file" id="imageUpload" accept="image/*">
-    <div class="prediction" id="prediction"></div>
+    <div class="container">
+        <h1>Model Prediction</h1>
+        <input type="file" id="imageUpload" accept="image/*">
+        <div class="prediction" id="prediction">Prediction will be displayed here</div>
+        <!-- Displaying the image -->
+        <img id="uploadedImage" src="" alt="Uploaded Image" style="display:none;">
+    </div>
 
     <script>
         let model;
@@ -22,18 +45,32 @@
             console.log("Model loaded.");
         }
 
-        async function predict(imageData) {
-            // Assuming your model takes 224x224 images as input
-            let tensor = tf.browser.fromPixels(imageData).resizeNearestNeighbor([224, 224]).toFloat();
-            let offset = tf.scalar(255.0);
-            tensor = tensor.div(offset).expandDims();
+        // Function to interpret the prediction score
+        function interpretPrediction(predictionScore) {
+            const threshold = 0.5; // Adjust this threshold as necessary
+            const roundedScore = predictionScore.toFixed(4); // Rounded to 4 decimal places
+            const predictionText = predictionScore >= threshold ? `Malignant (Yes)` : `Benign (No)`;
+            return `${predictionText}, Score: ${roundedScore}`;
+        }
 
-            // Make a prediction
+        async function predict(imageData) {
+            let tensor = tf.browser.fromPixels(imageData)
+                .resizeNearestNeighbor([224, 224]) // Resize the image
+                .toFloat()
+                .div(tf.scalar(255.0))
+                .expandDims();
+
             const prediction = await model.predict(tensor).data();
             console.log(prediction);
 
-            // Display the prediction
-            document.getElementById('prediction').innerText = `Prediction: ${prediction}`;
+            // Interpret and display the prediction
+            const interpretedPrediction = interpretPrediction(prediction[0]); // Assuming a single output prediction
+            document.getElementById('prediction').innerText = `Prediction: ${interpretedPrediction}`;
+            
+            // Display the uploaded image
+            const uploadedImageElement = document.getElementById('uploadedImage');
+            uploadedImageElement.src = imageData.src;
+            uploadedImageElement.style.display = 'block';
         }
 
         window.addEventListener('load', () => {
