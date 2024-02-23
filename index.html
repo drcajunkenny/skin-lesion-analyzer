@@ -12,43 +12,73 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
-            background-color: #0000FF; /* Blue background */
-            color: white; /* White text */
+            height: 75vh; 
+            background-color: #0000FF; 
+            color: white; 
+            flex-direction: column;
+            scroll-padding-bottom: 100vh;
         }
         .container {
             text-align: center;
             width: 80%;
             max-width: 600px;
         }
+        .prediction-title {
+            margin-top: 10vh;
+            font-size: 28px;
+            margin-bottom: 8px;
+
+        }
         #imageUpload {
-            margin-bottom: 20px;
-        }
-        img {
-            display: block; /* Ensures the image is block level for margin auto to work */
-            margin: 20px auto; /* Adds space and centers the image */
-            max-width: 100%; /* Ensures the image is responsive */
-        }
-        .prediction {
-            margin-top: 20px;
-        }
-        #refreshButton {
-            display: block;
             margin: 20px auto;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            width: 33.3%; 
+            display: none; /* Initially hidden */
+        }
+        #uploadLabel {
+            display: block; /* Show this initially */
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 18px; /* Larger font size */
+            background-color: #ffffff;
+            color: #000000;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 33.3%;
+        }
+        img {
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .disclaimer {
+            font-size: 13px; 
+            margin-bottom: 20px;
+        }
+        #refreshButton {
+            display: none; /* Initially hidden, shown after image selection */
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Model Prediction</h1>
+        <div class="prediction-title">
+            <div>Skin Lesion</div>
+            <div>Model Prediction</div>
+        </div>
+        <div class="disclaimer">*This is not a diagnostic test. It is intended for study purposes only.*</div>
+        <label id="uploadLabel" for="imageUpload">Choose Image</label>
         <input type="file" id="imageUpload" accept="image/*">
-        <button id="refreshButton" onclick="location.reload()">Upload Next Image</button>
+        <button id="refreshButton" onclick="refreshPage()">Upload Next Image</button>
         <div class="prediction" id="prediction">Prediction will be displayed here</div>
-        <!-- Displaying the image -->
-        <img id="uploadedImage" src="" alt="Uploaded Image" style="display:none;">
     </div>
 
     <script>
@@ -59,30 +89,30 @@
             console.log("Model loaded.");
         }
 
-        // Function to interpret the prediction score
         function interpretPrediction(predictionScore) {
-            const threshold = 0.5; 
+            const threshold = 0.5;
             return predictionScore >= threshold ? 'Malignant' : 'Benign';
         }
 
         async function predict(imageData) {
+            document.getElementById('uploadLabel').style.display = 'none'; 
+
             let tensor = tf.browser.fromPixels(imageData)
-                .resizeNearestNeighbor([224, 224]) // Resize the image
+                .resizeNearestNeighbor([224, 224]) 
                 .toFloat()
                 .div(tf.scalar(255.0))
                 .expandDims();
 
             const prediction = await model.predict(tensor).data();
-            console.log(prediction);
 
-            // Interpret and display the prediction
             const interpretedPrediction = interpretPrediction(prediction[0]);
             document.getElementById('prediction').innerText = interpretedPrediction;
             
-            // Display the uploaded image
-            const uploadedImageElement = document.getElementById('uploadedImage');
-            uploadedImageElement.src = imageData.src;
-            uploadedImageElement.style.display = 'block';
+            document.getElementById('refreshButton').style.display = 'block';
+        }
+
+        function refreshPage() {
+            location.reload();
         }
 
         window.addEventListener('load', () => {
@@ -94,6 +124,7 @@
                     const img = new Image();
                     img.src = e.target.result;
                     img.onload = () => predict(img);
+                    document.body.appendChild(img); // Display the image
                 };
                 reader.readAsDataURL(file);
             });
